@@ -10,7 +10,7 @@ RUN cat /oracle-xe_10.2.0.1-1.1_i386.deba* > /oracle-xe_10.2.0.1-1.1_i386.deb
 COPY sources.list /etc/apt
 RUN chmod 664 /etc/apt/sources.list
 
-# Install sshd
+# Install sshd and architecture i386
 RUN dpkg --add-architecture i386
 RUN apt-get update && apt-get install -y \
    bc:i386 \
