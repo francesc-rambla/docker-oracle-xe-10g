@@ -7,17 +7,25 @@ ADD oracle-xe_10.2.0.1-1.1_i386.debab /
 ADD oracle-xe_10.2.0.1-1.1_i386.debac /
 RUN cat /oracle-xe_10.2.0.1-1.1_i386.deba* > /oracle-xe_10.2.0.1-1.1_i386.deb
 
+# Change sources.list to point archive.debian.org
 COPY sources.list /etc/apt
 RUN chmod 664 /etc/apt/sources.list
-
 # Install sshd and architecture i386
 RUN dpkg --add-architecture i386
-RUN apt-get update && apt-get install -y \
-   bc:i386 \
-   libaio1:i386 \
-   libc6-i386 \
-   net-tools \
-   openssh-server 
+
+# Downgrade libc because to meet libc6-i386 dependencies
+COPY *.deb /
+RUN dpkg -i  libc-bin_2.13-38+deb7u10_amd64.deb libc6_2.13-38+deb7u10_amd64.deb
+
+# Install and configure dependencies
+RUN apt-get update \
+  && apt-get -f install \
+  && apt-get install -y \
+       libc6-i386 \
+       libaio1:i386 \
+       bc:i386 \
+       net-tools \
+       openssh-server 
 RUN mkdir /var/run/sshd
 RUN echo 'root:admin' | chpasswd
 RUN sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config
@@ -35,7 +43,7 @@ RUN echo 'export PATH=$ORACLE_HOME/bin:$PATH' >> /etc/bash.bashrc
 RUN echo 'export ORACLE_SID=XE' >> /etc/bash.bashrc
 
 # Remove installation files
-RUN rm /oracle-xe_10.2.0.1-1.1_i386.deb*
+RUN rm /*.deb
 RUN apt-get clean
 
 EXPOSE 1521 22
